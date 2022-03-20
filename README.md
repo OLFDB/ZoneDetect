@@ -1,4 +1,5 @@
-# ZoneDetect
+# ZoneDetect 
+# with changes to build on macos
 
 This is a C library that allows you to find an area a point belongs to using a database file. A typical example would be looking up the country or timezone given a latitude and longitude. The timezone database also contains the country information.
 
