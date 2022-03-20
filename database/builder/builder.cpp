@@ -35,7 +35,7 @@
 #include <functional>
 #include <math.h>
 #include <tuple>
-
+#undef assert
 unsigned version = 1;
 
 const double Inf = std::numeric_limits<float>::infinity();
