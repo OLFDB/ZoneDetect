@@ -35,11 +35,17 @@ LDFLAGS=-shared
 ifeq ($(OS),Windows_NT)
   EXT=dll
 else
+UNAME_S := $(shell uname -s)
   EXT=so
   VER_MAJ = $(word 1,$(subst ., ,$(VERSION)))
   VER_MIN = $(word 2,$(subst ., ,$(VERSION)))
   CFLAGS += -fPIC
-  LDFLAGS += -Wl,-soname=$(EXECUTABLE).$(VERSION) -Wl,--hash-style=gnu
+  ifeq ($(UNAME_S),Darwin)
+    prefix = /usr/local
+    LDFLAGS += -Wl,-install_name,$(EXECUTABLE).$(VERSION) -Wl
+  else
+    LDFLAGS += -Wl,-soname=$(EXECUTABLE).$(VERSION) -Wl,--hash-style=gnu  
+  endif
 endif
 
 prefix ?= /usr
@@ -68,19 +74,28 @@ clean:
 
 install: $(EXECUTABLE)
 	install -m 0755 -d $(DESTDIR)$(includedir) $(DESTDIR)$(libdir)
+ifeq ($(UNAME_S),Darwin)
+	install -m 0644 zonedetect.h $(DESTDIR)$(includedir)
+else
 	install -m 0644 -t $(DESTDIR)$(includedir) zonedetect.h
+endif
 ifeq ($(OS),Windows_NT)
 	install -m 0644 $(EXECUTABLE) -t $(DESTDIR)$(libdir) $(if $(STRIP),--strip --strip-program=$(STRIP))
 else
+ifeq ($(UNAME_S),Darwin)
+	install -m 0644 $(EXECUTABLE) $(DESTDIR)$(libdir)/$(EXECUTABLE).$(VERSION)
+else
 	install -m 0644 $(EXECUTABLE) -D $(DESTDIR)$(libdir)/$(EXECUTABLE).$(VERSION) $(if $(STRIP),--strip --strip-program=$(STRIP))
+endif
 	ln -sf $(EXECUTABLE).$(VERSION) $(DESTDIR)$(libdir)/$(EXECUTABLE).$(VER_MAJ).$(VER_MIN)
 	ln -sf $(EXECUTABLE).$(VER_MAJ).$(VER_MIN) $(DESTDIR)$(libdir)/$(EXECUTABLE).$(VER_MAJ)
 	ln -sf $(EXECUTABLE).$(VER_MAJ) $(DESTDIR)$(libdir)/$(EXECUTABLE)
 endif
 	# Assuming DESTDIR is set for cross-installing only, we don't need
 	# (and probably do not have) ldconfig
+ifneq ($(UNAME_S),Darwin)
 	$(if $(DESTDIR),,ldconfig)
-
+endif
 nice:
 	mkdir -p bak/
 	touch $(addsuffix .orig,$(INCLUDES_SRC))
