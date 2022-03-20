@@ -2,7 +2,12 @@
 
 set -e
 
-g++ builder.cpp -o builder -lshp
+if [ -z 'echo darwin21|grep darwin' ];then 
+
+    g++ builder.cpp -o builder -lshp
+else
+    g++ builder.cpp -o builder -lshp -std=c++17
+fi
 
 rm -rf out naturalearth timezone db.zip
 mkdir -p out
